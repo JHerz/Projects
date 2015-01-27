@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Snake</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <style>
+            #canvas{background-color:teal;}
+
+            h1 {margin-bottom: 70px;
+                color:green;
+                font-size: 4.8em;
+                margin-top: -4px;}
+
+            div{text-align:center;}
+
+            img{height: 120px;
+                margin-top: -69px;}
+
+            #sidebar{
+                position:absolute; 
+                height:100%;
+                width:21%;
+                float:left;
+                background-color: #FAFA62;
+                margin-left:34px;}
+
+            h2{color:teal;
+            }
+
+            h2:hover{
+                cursor:pointer;
+                color:#C27D25;
+            }
+            p{color:green;
+              margin:9px;}
+
+        </style>
+    </head>
+    <body>
+        <div id="sidebar"><h2 id="new">New Game</h2><h2 id="how">How to Play</h2></div>
+        <div id="title"><h1>SNAKE</h1></div>
+        <div id = "pic"><img src="greenSnake.jpg"></div>
+        <div id="game"><canvas id="canvas"></canvas></div>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script>
+            $(function() {
+                var canvas = $("#canvas");
+                context = canvas[0].getContext("2d");
+                canvas.attr("width", "300px");
+                canvas.attr("height", "300px");
+                var innerTimer;
+                var showRules = false;
+                fruit = {};
+                score=0;
+                function game() {
+
+                    var direction = "right";
+                    var time = 340;
+                    snake = [];
+
+
+                    for (var i = 0; i <= 120; i += 20)
+                    {
+                        snake.push({x: i, y: 0});
+                    }
+
+                    function getRandomInt(min, max) {
+                        return Math.floor(Math.random() * (max - min + 1)) + min;
+                    }
+
+                    function showFruit() {
+                        var rx = getRandomInt(0, 14) * 20;
+                        var ry = getRandomInt(0, 14) * 20;
+                        //we cannot allow the fruit to appear in the same space as the snake:
+                        for (i = 0; i <= snake.length - 1; i++) {
+                            if (snake[i].x == rx && snake[i].y == ry) {
+                                showFruit();
+                                return;
+                            }
+                        }
+                        context.fillStyle = "rgb(250,250,98)";
+                        context.fillRect(rx, ry, 20, 20);
+                        fruit.x = rx;
+                        fruit.y = ry;
+                    }
+
+                    function firstDraw() {
+                        context.setFillColor(0, 255, 0, 1);
+                        for (var i = 0; i <= snake.length - 1; i++) {
+                            context.fillRect(snake[i].x, snake[i].y, 20, 20);
+                        }
+                    }
+
+                    function newDraw() {
+                        context.setFillColor(0, 255, 0, 1);
+                        context.clearRect(snake[0].x, snake[0].y, 20, 20);
+                        context.fillRect(snake[snake.length - 1].x, snake[snake.length - 1].y, 20, 20);
+                        snake.shift();
+                    }
+
+                    firstDraw();
+                    outerTimer = function() {
+                        innerTimer = setInterval(function() {
+
+                            switch (direction) {
+                                case "down":
+                                    snake.push({x: snake[snake.length - 1].x, y: snake[snake.length - 1].y + 20});
+                                    break;
+
+                                case "up":
+                                    snake.push({x: snake[snake.length - 1].x, y: snake[snake.length - 1].y - 20});
+                                    break;
+
+                                case "left":
+                                    snake.push({x: snake[snake.length - 1].x - 20, y: snake[snake.length - 1].y});
+                                    break;
+
+                                case "right":
+                                    snake.push({x: snake[snake.length - 1].x + 20, y: snake[snake.length - 1].y});
+                                    break;
+                            }
+                            newDraw();
+                            //if snake eats fruit we want it to grow, a new fruit to appear, and the game to speed up a bit:
+                            if (fruit.y == snake[snake.length - 1].y && fruit.x == snake[snake.length - 1].x) {
+                                switch (direction) {
+                                    case "down":
+                                        snake.push({x: snake[snake.length - 1].x, y: snake[snake.length - 1].y + 20});
+                                        break;
+                                    case "up":
+                                        snake.push({x: snake[snake.length - 1].x, y: snake[snake.length - 1].y - 20});
+                                        break;
+                                    case "right":
+                                        snake.push({x: snake[snake.length - 1].x + 20, y: snake[snake.length - 1].y});
+                                        break;
+                                    case "left":
+                                        snake.push({x: snake[snake.length - 1].x - 20, y: snake[snake.length - 1].y});
+                                        break;
+                                }
+                                context.fillRect(snake[snake.length - 1].x, snake[snake.length - 1].y, 20, 20);
+                                score+=100;
+                                showFruit();
+                                clearInterval(innerTimer);
+                                time -= 4;
+                                outerTimer();
+                            }
+                            //if snake touches itself or the wall, the game ends:
+                            for (i = 0; i < snake.length - 1; i++) {
+                                if (snake[snake.length - 1].x == snake[i].x && snake[snake.length - 1].y == snake[i].y) {
+                                    gameover();
+                                }
+                            }
+
+                            if (snake[snake.length - 1].x < 0 || snake[snake.length - 1].x > 300
+                                    || snake[snake.length - 1].y < 0 || snake[snake.length - 1].y > 300) {
+                                gameover();
+                            }
+
+                        }, time);
+                    }
+                    outerTimer();
+                    showFruit();
+
+                    function gameover() {
+                        alert("game over!!!\nYour score: " + score);
+                        clearInterval(innerTimer);
+                        context.clearRect(fruit.x, fruit.y, 20, 20);
+                        for (i = 0; i < snake.length; i++) {
+                            context.clearRect(snake[i].x, snake[i].y, 20, 20);
+                        }
+
+                    }
+
+                    $("body").keydown(function(event) {
+                        switch (event.which) {
+                            case 37:
+                                if (direction !== "right") {    //not allowing snake to reverse 
+                                    direction = "left";         //direction immediately without making
+                                }                               //a U-turn
+                                break;
+                            case 38:
+                                if (direction !== "down") {
+                                    direction = "up";
+                                }
+                                break;
+                            case 39:
+                                if (direction !== "left") {
+                                    direction = "right";
+                                }
+                                break;
+                            case 40:
+                                if (direction !== "up") {
+                                    direction = "down";
+                                }
+                                break;
+                        }
+
+                    });
+
+                }
+                $("#new").click(function() {
+                    clearInterval(innerTimer);
+                    score=0;
+                    time = 340;
+                    context.clearRect(fruit.x, fruit.y, 20, 20);
+                    for (i = 0; i < snake.length; i++) {
+                        context.clearRect(snake[i].x, snake[i].y, 20, 20);
+                    }
+
+                    game();
+                });
+                $("#how").click(function() {
+                    if (showRules == false) {
+
+                        $("<p>Use the directional arrows on your keyboard to move the snake. \n\
+ The goal is for the snake to eat the fruits (the yellow squares)\n\
+ without making contact with the walls or itself. \n\
+Each time it eats a fruit the snake grows in size and it's speed increases. \n\
+Have fun! </p>").fadeIn(200).appendTo($("#sidebar"));
+                        showRules = true;
+                    }
+                    else {
+                        $("p").fadeOut(200);
+                        showRules = false;
+                    }
+                });
+                game();
+            });
+        </script>
+    </body>
+</html>
